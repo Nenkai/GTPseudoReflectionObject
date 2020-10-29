@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using GTStandardDefinitionEditor.Utils;
 namespace GTStandardDefinitionEditor.Entities
 {
-    public class SDEFDataEntry
+    public class SDEFMetaDataEntry
     {
         public string Name { get; set; }
         public ushort TypeOrIndex { get; set; }

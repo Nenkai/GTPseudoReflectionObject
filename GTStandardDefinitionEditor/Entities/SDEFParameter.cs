@@ -8,21 +8,62 @@ using Syroot.BinaryData;
 
 namespace GTStandardDefinitionEditor.Entities
 {
-    public class SDEFParameter
+    public abstract class SDEFBase
     {
         public int Depth { get; set; }
-        public List<SDEFParameter> ChildParameters { get; set; } = new List<SDEFParameter>();
 
+        /// <summary>
+        /// Type of parameter
+        /// </summary>
         public NodeType NodeType { get; set; }
-        public string Name { get; set; }
-        public string CustomTypeName { get; set; }
 
-        public int CustomTypeArrayLength { get; set; }
-        public SDEFVariant RawValue;
-        public SDEFVariant[] RawValuesArray;
+        /// <summary>
+        /// Child parameters for this param if custom type
+        /// </summary>
+        public List<SDEFBase> ChildParameters { get; set; } = new List<SDEFBase>();
+
+        /// <summary>
+        /// Name for this param
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Custom Type Name for this param if applicable
+        /// </summary>
+        public string CustomTypeName { get; set; }
 
         public override string ToString()
             => Name;
+
+    }
+
+    public class SDEFParam : SDEFBase
+    {
+        /// <summary>
+        /// Raw Value for this Param
+        /// </summary>
+        public SDEFVariant RawValue;
+    }
+
+    public class SDEFParamArray : SDEFBase
+    {
+        /// <summary>
+        /// Custom Type Array Elements
+        /// </summary>
+        public List<SDEFBase> Values { get; set; } = new List<SDEFBase>();
+
+        /// <summary>
+        /// Raw Values Array Elements
+        /// </summary>
+        public SDEFVariant[] RawValuesArray = Array.Empty<SDEFVariant>();
+
+        public override string ToString()
+        {
+            if (NodeType == NodeType.CustomTypeArray)
+                return $"{Name}[{Values.Count}]";
+            else
+                return $"{Name}[{RawValuesArray.Length}]";
+        }
     }
 
     public enum NodeType
@@ -44,6 +85,7 @@ namespace GTStandardDefinitionEditor.Entities
         private uint _uint;
         private double _double;
         private sbyte _sByte;
+        private ulong _ulong;
 
         public SDEFVariant(int val)
         {
@@ -81,6 +123,12 @@ namespace GTStandardDefinitionEditor.Entities
             _float = val;
         }
 
+        public SDEFVariant(ulong val)
+        {
+            Type = ValueType.ULong;
+            _ulong = val;
+        }
+
         public SDEFVariant(double val)
         {
             Type = ValueType.Double;
@@ -94,6 +142,7 @@ namespace GTStandardDefinitionEditor.Entities
         public uint GetUInt() => _uint;
         public double GetDouble() => _double;
         public sbyte GetSByte() => _sByte;
+        public ulong GetULong() => _ulong;
 
         public void Set(int value) => _int = value;
         public void Set(uint value) => _uint = value;
@@ -102,6 +151,7 @@ namespace GTStandardDefinitionEditor.Entities
         public void Set(bool value) => _bool = value;
         public void Set(float value) => _float = value;
         public void Set(double value) => _double = value;
+        public void Set(ulong value) => _ulong = value;
 
         public void WriteToStream(BinaryStream writer)
         {
@@ -121,6 +171,8 @@ namespace GTStandardDefinitionEditor.Entities
                     writer.WriteSingle(_float); break;
                 case ValueType.Double:
                     writer.WriteDouble(_double); break;
+                case ValueType.ULong:
+                    writer.WriteDouble(_ulong); break;
                 default:
                     break;
             }
@@ -148,6 +200,8 @@ namespace GTStandardDefinitionEditor.Entities
                     return $"{_uint} (UInt)";
                 case ValueType.Float:
                     return $"{_float} (Float)";
+                case ValueType.ULong:
+                    return $"{_ulong} (ULong)";
                 case ValueType.Double:
                     return $"{_double} (Double)";
                 default:
@@ -167,6 +221,7 @@ namespace GTStandardDefinitionEditor.Entities
         Int = 10,
         UInt = 11,
         Float = 12,
+        ULong = 14,
         Double = 15,
     }
 }

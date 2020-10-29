@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace GTStandardDefinitionEditor.Entities
 {
-    public class SDEFDataCategory
+    public class SDEFMetaDataCategory
     {
         public string Name { get; set; }
-        public List<SDEFDataEntry> Entries = new List<SDEFDataEntry>();
+        public List<SDEFMetaDataEntry> Entries = new List<SDEFMetaDataEntry>();
 
         public override string ToString()
             => $"{Name} ({Entries.Count} entries)";

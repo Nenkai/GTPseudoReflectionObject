@@ -89,7 +89,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Entities\SDEFData.cs" />
+    <Compile Include="Entities\SDEFMetaData.cs" />
     <Compile Include="Entities\SDEFDataCategory.cs" />
     <Compile Include="Entities\SDEFDataEntry.cs" />
     <Compile Include="Entities\SDEFParameter.cs" />

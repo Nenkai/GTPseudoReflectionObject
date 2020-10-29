@@ -10,11 +10,12 @@ namespace GTStandardDefinitionEditor.Entities
 {
     public class StandardDefinition
     {
-        public SDEFParameter ParameterRoot { get; set; }
-        public List<SDEFParameter> ParameterList { get; set; } = new List<SDEFParameter>();
+        public SDEFParam ParameterRoot { get; set; }
+        public List<SDEFBase> ParameterList { get; set; } = new List<SDEFBase>();
 
         public void Save(string path)
         {
+            
             // First we build the type metadata
             var metadataList = ParameterList
                 .OrderByDescending(e => e.Depth) // Base Tree Meta Data is stored by depth within the tree
@@ -34,46 +35,22 @@ namespace GTStandardDefinitionEditor.Entities
 
                 for (int i = 0; i < metadataList.Count; i++)
                 {
-                    SDEFParameter type = metadataList[i];
+                    SDEFBase type = metadataList[i];
                     writer.WriteInt32(type.CustomTypeName.Length + 1);
                     writer.WriteString(type.CustomTypeName, StringCoding.ZeroTerminated);
-                    writer.WriteInt32(type.ChildParameters.Count);
 
-                    foreach (var entry in type.ChildParameters)
+                    if (type.NodeType == NodeType.CustomTypeArray)
                     {
-                        writer.WriteInt32(entry.Name.Length + 1);
-                        writer.WriteString(entry.Name, StringCoding.ZeroTerminated);
-                        if (entry.NodeType == NodeType.CustomTypeArray || entry.NodeType == NodeType.RawValueArray)
-                            writer.WriteInt16((short)ValueType.Array);
-                        else if (entry.NodeType == NodeType.RawValue)
-                            writer.WriteInt16((short)entry.RawValue.Type);
-                        else if (entry.NodeType == NodeType.CustomType)
-                        {
-                            int typeIndex = metadataList.FindIndex(metaType => metaType.CustomTypeName == entry.CustomTypeName);
-                            writer.WriteInt16((short)typeIndex);
-                        }
-
-                        writer.WriteBoolean(entry.NodeType == NodeType.CustomType, BooleanCoding.Word);
-
-                        if (entry.NodeType == NodeType.CustomTypeArray || entry.NodeType == NodeType.RawValueArray)
-                        {
-                            if (entry.NodeType == NodeType.RawValueArray)
-                                writer.WriteInt16((short)entry.RawValuesArray[0].Type);
-                            else
-                            {
-                                int typeIndex = metadataList.FindIndex(metaType => metaType.CustomTypeName == entry.CustomTypeName);
-                                writer.WriteInt16((short)typeIndex);
-                            }
-
-                            writer.WriteBoolean(entry.NodeType == NodeType.CustomTypeArray, BooleanCoding.Word);
-
-                            if (entry.NodeType == NodeType.CustomTypeArray)
-                                writer.WriteInt32((short)entry.CustomTypeArrayLength);
-                            else
-                                writer.WriteInt32((short)entry.RawValuesArray.Length);
-
-
-                        }
+                        var firstElement = (type as SDEFParamArray).Values.First();
+                        writer.WriteInt32(firstElement.ChildParameters.Count);
+                        WriteParameterMetadata(writer, metadataList, firstElement);
+                        
+                    }
+                    else
+                    {
+                        writer.WriteInt32(type.ChildParameters.Count);
+                        WriteParameterMetadata(writer, metadataList, type);
+                        
                     }
                 }
 
@@ -87,23 +64,73 @@ namespace GTStandardDefinitionEditor.Entities
 
         }
 
-        private void TraverseAndWriteData(BinaryStream writer, SDEFParameter param)
+        public void WriteParameterMetadata(BinaryStream writer, List<SDEFBase> metadataList, SDEFBase sdefBase)
+        {
+            for (int j = 0; j < sdefBase.ChildParameters.Count; j++)
+            {
+                SDEFBase entry = sdefBase.ChildParameters[j];
+                writer.WriteInt32(entry.Name.Length + 1);
+                writer.WriteString(entry.Name, StringCoding.ZeroTerminated);
+
+                if (entry is SDEFParamArray)
+                    writer.WriteInt16((short)ValueType.Array);
+                else
+                {
+                    SDEFParam param = entry as SDEFParam;
+                    if (entry.NodeType == NodeType.RawValue)
+                        writer.WriteInt16((short)param.RawValue.Type);
+                    else if (entry.NodeType == NodeType.CustomType)
+                    {
+                        int typeIndex = metadataList.FindIndex(metaType => metaType.CustomTypeName == entry.CustomTypeName);
+                        writer.WriteInt16((short)typeIndex);
+                    }
+                }
+
+                writer.WriteBoolean(entry.NodeType == NodeType.CustomType, BooleanCoding.Word);
+
+                if (entry is SDEFParamArray array)
+                {
+                    if (entry.NodeType == NodeType.RawValueArray)
+                        writer.WriteInt16((short)array.RawValuesArray[0].Type);
+                    else
+                    {
+                        int typeIndex = metadataList.FindIndex(metaType => metaType.CustomTypeName == entry.CustomTypeName);
+                        writer.WriteInt16((short)typeIndex);
+                    }
+
+                    writer.WriteBoolean(entry.NodeType == NodeType.CustomTypeArray, BooleanCoding.Word);
+
+                    if (entry.NodeType == NodeType.CustomTypeArray)
+                        writer.WriteInt32((short)array.Values.Count);
+                    else
+                        writer.WriteInt32((short)array.RawValuesArray.Length);
+
+
+                }
+            }
+        }
+
+        private void TraverseAndWriteData(BinaryStream writer, SDEFBase param)
         {
             foreach (var entry in param.ChildParameters)
             {
                 if (entry.NodeType == NodeType.CustomType)
                     TraverseAndWriteData(writer, entry);
                 else if (entry.NodeType == NodeType.RawValue)
-                    entry.RawValue.WriteToStream(writer);
-                else if (entry.NodeType == NodeType.CustomTypeArray)
+                    (entry as SDEFParam).RawValue.WriteToStream(writer);
+                else
                 {
-                    for (int i = 0; i < entry.CustomTypeArrayLength; i++)
-                        TraverseAndWriteData(writer, entry);
-                }
-                else if (entry.NodeType == NodeType.RawValueArray)
-                {
-                    foreach (var val in entry.RawValuesArray)
-                        val.WriteToStream(writer);
+                    var arr = entry as SDEFParamArray;
+                    if (entry.NodeType == NodeType.CustomTypeArray)
+                    {
+                        for (int i = 0; i < arr.Values.Count; i++)
+                          TraverseAndWriteData(writer, arr.Values[i]);
+                    }
+                    else if (entry.NodeType == NodeType.RawValueArray)
+                    {
+                        foreach (var val in arr.RawValuesArray)
+                            val.WriteToStream(writer);
+                    }
                 }
             }
         }

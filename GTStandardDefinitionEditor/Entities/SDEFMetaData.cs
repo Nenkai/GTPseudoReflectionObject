@@ -10,20 +10,22 @@ using GTStandardDefinitionEditor.Utils;
 
 namespace GTStandardDefinitionEditor.Entities
 {
-    public class SDEFData
+    public class SDEFMetaData
     {
         public const string MAGIC = "SDEF";
 
-        public List<SDEFDataCategory> Categories { get; set; } = new List<SDEFDataCategory>();
+        public List<SDEFMetaDataCategory> Categories { get; set; } = new List<SDEFMetaDataCategory>();
         public ushort MasterTypeIndexOrID { get; set; }
         public bool MasterHasCustomType { get; set; }
 
         public static StandardDefinition FromFile(string path)
         {
             var bytes = File.ReadAllBytes(path);
+
+            // Read the sdef type metadata
             using (var bs = new BinaryStream(new MemoryStream(bytes)))
             {
-                SDEFData sdef = new SDEFData();
+                SDEFMetaData sdef = new SDEFMetaData();
                 if (bs.ReadString(4) != MAGIC)
                     throw new InvalidDataException("Not a SDEF file.");
 
@@ -38,7 +40,7 @@ namespace GTStandardDefinitionEditor.Entities
                     int strLength = bs.ReadInt32();
                     var categoryName = bs.ReadString(strLength - 1); bs.Position += 1; // Null
 
-                    var category = new SDEFDataCategory();
+                    var category = new SDEFMetaDataCategory();
                     category.Name = categoryName;
                     sdef.Categories.Add(category);
                     int entryCount = bs.ReadInt32();
@@ -47,14 +49,15 @@ namespace GTStandardDefinitionEditor.Entities
                         int entryNameLength = bs.ReadInt32(); 
                         var entryName = bs.ReadString(entryNameLength - 1); bs.Position += 1; // Null
 
-                        var entry = new SDEFDataEntry();
+                        var entry = new SDEFMetaDataEntry();
                         entry.Name = entryName;
                         category.Entries.Add(entry);
 
                         entry.TypeOrIndex = bs.ReadUInt16();
                         entry.HasCustomType = bs.ReadBoolean(BooleanCoding.Word);
 
-                        if (entry.TypeOrIndex == 2)
+                        // If its an array, additional data is stored to know if its an array of types rather than raw values
+                        if (entry.TypeOrIndex == (int)(ValueType.Array))
                         {
                             if (!entry.HasCustomType)
                             {
@@ -66,14 +69,15 @@ namespace GTStandardDefinitionEditor.Entities
                     }
                 }
 
+                // Final data is pretty much which type is first
                 sdef.MasterTypeIndexOrID = bs.ReadUInt16();
                 sdef.MasterHasCustomType = bs.ReadBoolean(BooleanCoding.Word);
 
-                // Traverse
+                // The data part is the tree structure reassembling & data
                 var def = new StandardDefinition();
                 var mainCategory = sdef.Categories[sdef.MasterTypeIndexOrID];
 
-                def.ParameterRoot = new SDEFParameter();
+                def.ParameterRoot = new SDEFParam();
                 def.ParameterRoot.CustomTypeName = mainCategory.Name;
                 def.ParameterRoot.NodeType = NodeType.CustomType;
 
@@ -83,12 +87,17 @@ namespace GTStandardDefinitionEditor.Entities
             }
         }
 
-        public static void Traverse(BinaryStream reader, StandardDefinition sdef, SDEFParameter parentNode, SDEFData sdefMetadata, SDEFDataCategory nodeCategory, ref int depth)
+        public static void Traverse(BinaryStream reader, StandardDefinition sdef, SDEFBase parentNode, SDEFMetaData sdefMetadata, SDEFMetaDataCategory nodeCategory, ref int depth)
         {
             depth++;
             foreach (var entry in nodeCategory.Entries)
             {
-                var current = new SDEFParameter();
+                SDEFBase current;
+                if (!entry.HasCustomType && (ValueType)entry.TypeOrIndex == ValueType.Array)
+                    current = new SDEFParamArray(); // Param is a param array
+                else
+                    current = new SDEFParam(); // Param is regular parameter, but if its a custom type it may have children parameters
+
                 current.Name = entry.Name;
                 parentNode.ChildParameters.Add(current);
 
@@ -98,6 +107,7 @@ namespace GTStandardDefinitionEditor.Entities
                     current.CustomTypeName = sdefMetadata.Categories[entry.TypeOrIndex].Name;
                     current.NodeType = NodeType.CustomType;
 
+                    // Traverse children parameter for this basic type
                     Traverse(reader, sdef, current, sdefMetadata, sdefMetadata.Categories[entry.TypeOrIndex], ref depth);
                 }
                 else if ((ValueType)entry.TypeOrIndex == ValueType.Array)
@@ -106,20 +116,31 @@ namespace GTStandardDefinitionEditor.Entities
                     {
                         current.NodeType = NodeType.CustomTypeArray;
                         current.CustomTypeName = sdefMetadata.Categories[entry.ArrayCategoryIndex].Name;
-                        current.CustomTypeArrayLength = (int)entry.ArrayLength;
 
                         for (int i = 0; i < entry.ArrayLength; i++)
-                            Traverse(reader, sdef, current, sdefMetadata, sdefMetadata.Categories[entry.ArrayCategoryIndex], ref depth);
+                        {
+                            // Create the element for the array to add later
+                            var arrayElement = new SDEFParam();
+                            arrayElement.CustomTypeName = current.CustomTypeName;
+                            arrayElement.NodeType = NodeType.CustomType;
+                            arrayElement.Name = $"[{i}]";
+                            Traverse(reader, sdef, arrayElement, sdefMetadata, sdefMetadata.Categories[entry.ArrayCategoryIndex], ref depth);
+
+                            // Don't forget to add our array element to the global parameter list
+                            sdef.ParameterList.Add(arrayElement);
+                            (current as SDEFParamArray).Values.Add(arrayElement);
+                        }
                     }
                     else
                     {
                         current.CustomTypeName = nodeCategory.Name;
                         current.NodeType = NodeType.RawValueArray;
-                        current.RawValuesArray = new SDEFVariant[entry.ArrayLength];
+
+                        (current as SDEFParamArray).RawValuesArray = new SDEFVariant[entry.ArrayLength];
                         for (int i = 0; i < entry.ArrayLength; i++)
                         {
                             var val = ReadData(reader, entry, (ValueType)entry.ArrayCategoryIndex);
-                            current.RawValuesArray[i] = val;
+                            (current as SDEFParamArray).RawValuesArray[i] = val;
                         }
                     }
                 }
@@ -127,7 +148,7 @@ namespace GTStandardDefinitionEditor.Entities
                 {
                     current.NodeType = NodeType.RawValue;
                     var variant = ReadData(reader, entry, (ValueType)entry.TypeOrIndex);
-                    current.RawValue = variant;
+                    (current as SDEFParam).RawValue = variant;
                 }
 
                 current.Depth = depth;            
@@ -135,7 +156,7 @@ namespace GTStandardDefinitionEditor.Entities
             depth--;
         }
 
-        public static SDEFVariant ReadData(BinaryStream bs, SDEFDataEntry entry, ValueType valType)
+        public static SDEFVariant ReadData(BinaryStream bs, SDEFMetaDataEntry entry, ValueType valType)
         {
             SDEFVariant variant;
             if (valType == ValueType.Float)
@@ -154,7 +175,7 @@ namespace GTStandardDefinitionEditor.Entities
             }
             else if (valType == ValueType.UInt)
             {
-                variant = new SDEFVariant((uint)bs.ReadUInt32());
+                variant = new SDEFVariant(bs.ReadUInt32());
             }
             else if (valType == ValueType.Double)
             {
@@ -164,11 +185,9 @@ namespace GTStandardDefinitionEditor.Entities
             {
                 variant = new SDEFVariant((sbyte)bs.ReadByte());
             }
-            else if (valType == (ValueType)14)
+            else if (valType == ValueType.ULong)
             {
-                bs.Position += 8;
-                variant = new SDEFVariant(1);
-                //throw new InvalidDataException($"Encountered unsupported type {valType} at 0x{bs.Position:X2}");
+                variant = new SDEFVariant(bs.ReadUInt64());
             }
             else
             {

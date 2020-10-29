@@ -44,7 +44,7 @@ namespace GTStandardDefinitionEditor
             {
                 try
                 {
-                    Database = SDEFData.FromFile(openDialog.FileName);
+                    Database = SDEFMetaData.FromFile(openDialog.FileName);
                 }
                 catch (Exception ex)
                 {
@@ -125,7 +125,7 @@ namespace GTStandardDefinitionEditor
             }
             else 
             {
-                SDEFVariant value = CurrentParameter?.Entry?.NodeType == NodeType.RawValue ? CurrentParameter.Entry.RawValue : CurrentParameter.ArrayElement;
+                SDEFVariant value = CurrentParameter?.Entry?.NodeType == NodeType.RawValue ? (CurrentParameter.Entry as SDEFParam).RawValue : CurrentParameter.ArrayElement;
                 paramType.Content = value.Type.ToString();
                 switch (value.Type)
                 {
@@ -150,6 +150,9 @@ namespace GTStandardDefinitionEditor
                     case Entities.ValueType.Double:
                         param_Double.IsEnabled = true;
                         param_Double.Value = value.GetDouble(); break;
+                    case Entities.ValueType.ULong:
+                        param_ULong.IsEnabled = true;
+                        param_ULong.Value = value.GetULong(); break;
                     default:
                         break;
                 }
@@ -161,7 +164,8 @@ namespace GTStandardDefinitionEditor
         {
             if (param_Double.Value != null)
             {
-                CurrentParameter.Entry.RawValue.Set(param_Double.Value.Value);
+                var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
+                val.Set(param_Double.Value.Value);
                 CurrentParameter.Name = CurrentParameter.ToString();
             }
         }
@@ -170,7 +174,7 @@ namespace GTStandardDefinitionEditor
         {
             if (param_Single.Value != null)
             {
-                var val = CurrentParameter.ArrayElement ?? CurrentParameter.Entry.RawValue;
+                var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
                 val.Set(param_Single.Value.Value);
                 CurrentParameter.Name = CurrentParameter.ToString();
             }
@@ -180,7 +184,7 @@ namespace GTStandardDefinitionEditor
         {
             if (param_UInteger.Value != null)
             {
-                var val = CurrentParameter.ArrayElement ?? CurrentParameter.Entry.RawValue;
+                var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
                 val.Set(param_UInteger.Value.Value);
                 CurrentParameter.Name = CurrentParameter.ToString();
             }
@@ -190,7 +194,7 @@ namespace GTStandardDefinitionEditor
         {
             if (param_SByte.Value != null)
             {
-                var val = CurrentParameter.ArrayElement ?? CurrentParameter.Entry.RawValue;
+                var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
                 val.Set(param_SByte.Value.Value);
                 CurrentParameter.Name = CurrentParameter.ToString();
             }
@@ -200,7 +204,7 @@ namespace GTStandardDefinitionEditor
         {
             if (param_Byte.Value != null)
             {
-                var val = CurrentParameter.ArrayElement ?? CurrentParameter.Entry.RawValue;
+                var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
                 val.Set(param_Byte.Value.Value);
                 CurrentParameter.Name = CurrentParameter.ToString();
             }
@@ -210,12 +214,21 @@ namespace GTStandardDefinitionEditor
         {
             if (param_Integer.Value != null)
             {
-                var val = CurrentParameter.ArrayElement ?? CurrentParameter.Entry.RawValue;
+                var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
                 val.Set(param_Integer.Value.Value);
                 CurrentParameter.Name = CurrentParameter.ToString();
             }
         }
 
+        private void param_ULong_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (param_Integer.Value != null)
+            {
+                var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
+                val.Set(param_ULong.Value.Value);
+                CurrentParameter.Name = CurrentParameter.ToString();
+            }
+        }
 
         public void BuildTree()
         {
@@ -226,7 +239,7 @@ namespace GTStandardDefinitionEditor
             tv_SDEFListing.Items.Add(root);
         }
 
-        public void BuildChildTree(SDEFListing item, SDEFParameter current)
+        public void BuildChildTree(SDEFListing item, SDEFBase current)
         {
             foreach (var entry in current.ChildParameters)
             {
@@ -239,14 +252,25 @@ namespace GTStandardDefinitionEditor
                 }
                 else if (entry.NodeType == NodeType.CustomTypeArray)
                 {
-                    BuildChildTree(listing, entry);
+                    SDEFParamArray array = entry as SDEFParamArray;
+                    for (int i = 0; i < array.Values.Count; i++)
+                    {
+                        SDEFBase element = array.Values[i];
+                        var arrValueListing = new SDEFListing() { Name = $"[{i}] - {array.CustomTypeName}" };
+                        BuildChildTree(arrValueListing, element);
+                        listing.Items.Add(arrValueListing);
+                    }
                 }
                 else if (entry.NodeType == NodeType.RawValueArray)
                 {
-                    foreach (var i in entry.RawValuesArray)
+                    SDEFParamArray array = entry as SDEFParamArray;
+                    for (int i = 0; i < array.RawValuesArray.Length; i++)
                     {
-                        var arrValueListing = new SDEFListing() { Name = $"(value) - {i.ToString()}" };
-                        arrValueListing.ArrayElement = i;
+                        SDEFVariant elem = array.RawValuesArray[i];
+                        var arrValueListing = new SDEFListing() { Name = $"[{i}] - {elem.ToString()}" };
+                        arrValueListing.ArrayElement = elem;
+                        arrValueListing.ArrayElementIndex = i;
+
                         listing.Items.Add(arrValueListing);
                     }
                 }
@@ -277,6 +301,9 @@ namespace GTStandardDefinitionEditor
 
             param_Double.IsEnabled = false;
             param_Double.Value = null;
+
+            param_ULong.IsEnabled = false;
+            param_ULong.Value = null;
         }
     }
 
@@ -299,8 +326,9 @@ namespace GTStandardDefinitionEditor
         }
 
         public SDEFVariant ArrayElement { get; set; }
+        public int ArrayElementIndex { get; set; }
 
-        public SDEFParameter Entry { get; set; }
+        public SDEFBase Entry { get; set; }
 
         public ObservableCollection<SDEFListing> Items { get; set; }
 
@@ -320,7 +348,7 @@ namespace GTStandardDefinitionEditor
             else if (Entry.NodeType == NodeType.CustomTypeArray)
                 return $"{Entry.Name} - {Entry.CustomTypeName}[]";
             else if (Entry.NodeType == NodeType.RawValue)
-                return $"{Entry.Name} - {Entry.RawValue.ToString()}";
+                return $"{Entry.Name} - {(Entry as SDEFParam).RawValue.ToString()}";
             else if (Entry.NodeType == NodeType.RawValueArray)
                 return $"{Entry.Name}[]";
             else

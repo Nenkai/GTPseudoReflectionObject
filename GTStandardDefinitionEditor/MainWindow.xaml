@@ -55,6 +55,9 @@
                 <xctk:DoubleUpDown IsEnabled="False" Name="param_Double" Margin="100,232,10,0" Height="20" ValueChanged="param_Double_ValueChanged" VerticalAlignment="Top"/>
                 <CheckBox IsEnabled="False" Name="param_Bool" Content="Enabled" HorizontalAlignment="Left" Margin="84,109,0,0" Height="20" VerticalAlignment="Top"/>
 
+                <Label Content="Unsigned Long Value:" Margin="10,257,0,0" HorizontalAlignment="Left" Width="Auto" Height="Auto" VerticalAlignment="Top"/>
+                <xctk:ULongUpDown IsEnabled="False" Name="param_ULong" Margin="140,261,7,0" Height="20" ValueChanged="param_ULong_ValueChanged" VerticalAlignment="Top"/>
+
             </Grid>
         </DockPanel>
     </DockPanel>
