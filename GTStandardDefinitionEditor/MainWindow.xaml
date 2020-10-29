@@ -1,0 +1,61 @@
+﻿<Window x:Class="GTStandardDefinitionEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:local="clr-namespace:GTStandardDefinitionEditor"
+        mc:Ignorable="d"
+        Title="Gran Turismo Standard Definition Editor" Height="700" Width="860">
+    <DockPanel LastChildFill="True">
+        <Menu DockPanel.Dock="Top" >
+            <MenuItem Header="_File" Height="24">
+                <MenuItem Header="_Open SDEF File" Click="OpenFile_Click" />
+                <MenuItem Name="menuItem_Save" Header="_Save As.." IsEnabled="False" Click="SaveFile_Click"/>
+                <MenuItem Name="menuItem_SaveDirect" Header="_Save" IsEnabled="False" Click="SaveDirect_Click"/>
+                <Separator />
+                <MenuItem Header="_Exit" />
+            </MenuItem>
+            <MenuItem Header="_About" Height="24" Click="MenuItem_Click">
+            </MenuItem>
+        </Menu>
+        <StatusBar DockPanel.Dock="Bottom" Height="24">
+            <StatusBarItem>
+                <TextBlock Name="tb_Status">Ready</TextBlock>
+            </StatusBarItem>
+        </StatusBar>
+        <DockPanel>
+            <TreeView DockPanel.Dock="Left" Width="420" Grid.Column="0" Name="tv_SDEFListing" SelectedItemChanged="tv_SDEFListing_SelectedItemChanged">
+                <TreeView.ItemTemplate>
+                    <HierarchicalDataTemplate DataType="{x:Type local:SDEFListing}" ItemsSource="{Binding Items}">
+                        <TextBlock Text="{Binding Name}" />
+                    </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+
+            <Grid DockPanel.Dock="Top" Grid.Column="1" Background="LightGray" >
+                <Label Content="Type:" Margin="10,10,0,0" HorizontalAlignment="Left"  Width="Auto" Height="Auto" VerticalAlignment="Top"/>
+                <Label Name="paramType" Content="N/A" Margin="52,10,10,0" Height="Auto" HorizontalContentAlignment="Right" VerticalAlignment="Top"/>
+
+                <Label Content="Byte Value:" Margin="10,41,0,0" HorizontalAlignment="Left"  Width="Auto" Height="Auto" VerticalAlignment="Top"/>
+                <xctk:ByteUpDown IsEnabled="False" Name="param_Byte" Margin="92,46,7,0" Height="20" ValueChanged="param_Byte_ValueChanged" VerticalAlignment="Top"/>
+                <Label Content="Signed Byte Value:" Margin="10,72,0,0" HorizontalAlignment="Left"  Width="Auto" Height="26" VerticalAlignment="Top"/>
+                <xctk:SByteUpDown IsEnabled="False" Name="param_SByte" Margin="132,77,10,0" Height="20" ValueChanged="param_SByte_ValueChanged" VerticalAlignment="Top"/>
+                <Label Content="Bool Value:" Margin="10,103,0,0" HorizontalAlignment="Left"  Width="Auto" Height="26" VerticalAlignment="Top"/>
+
+                <Label Content="Integer Value:" Margin="10,134,0,0" HorizontalAlignment="Left"  Width="Auto" Height="28" VerticalAlignment="Top"/>
+                <xctk:IntegerUpDown IsEnabled="False" Name="param_Integer" Margin="100,138,10,0" Height="20" ValueChanged="param_Integer_ValueChanged" VerticalAlignment="Top"/>
+                <Label Content="Unsigned Integer Value:" Margin="10,165,0,0" HorizontalAlignment="Left"  Width="Auto" Height="26" VerticalAlignment="Top"/>
+                <xctk:UIntegerUpDown IsEnabled="False" Name="param_UInteger" Margin="160,170,10,0" Height="20" ValueChanged="param_UInteger_ValueChanged" VerticalAlignment="Top"/>
+
+                <Label Content="Float Value:" Margin="10,196,0,0" HorizontalAlignment="Left" Width="Auto"  VerticalAlignment="Top"/>
+                <xctk:SingleUpDown IsEnabled="False" Name="param_Single" Margin="89,201,10,0" Height="20" ValueChanged="param_Single_ValueChanged" VerticalAlignment="Top"/>
+
+                <Label Content="Double Value:" Margin="10,227,0,0" HorizontalAlignment="Left" Width="Auto" Height="Auto" VerticalAlignment="Top"/>
+                <xctk:DoubleUpDown IsEnabled="False" Name="param_Double" Margin="100,232,10,0" Height="20" ValueChanged="param_Double_ValueChanged" VerticalAlignment="Top"/>
+                <CheckBox IsEnabled="False" Name="param_Bool" Content="Enabled" HorizontalAlignment="Left" Margin="84,109,0,0" Height="20" VerticalAlignment="Top"/>
+
+            </Grid>
+        </DockPanel>
+    </DockPanel>
+</Window>
