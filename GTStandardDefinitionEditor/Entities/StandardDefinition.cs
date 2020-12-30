@@ -12,6 +12,7 @@ namespace GTStandardDefinitionEditor.Entities
     {
         public SDEFParam ParameterRoot { get; set; }
         public List<SDEFBase> ParameterList { get; set; } = new List<SDEFBase>();
+        public int Version { get; set; }
 
         public void Save(string path)
         {
@@ -29,8 +30,10 @@ namespace GTStandardDefinitionEditor.Entities
             {
                 writer.WriteString("SDEF", StringCoding.Raw);
                 writer.Position += 4; // Runtime File Ptr
-                writer.WriteInt32(1);
-                writer.Position += 1;
+                writer.WriteInt32(Version);
+                if (Version >= 1)
+                    writer.Position += 1;
+
                 writer.WriteInt32(metadataList.Count);
 
                 for (int i = 0; i < metadataList.Count; i++)
@@ -101,11 +104,19 @@ namespace GTStandardDefinitionEditor.Entities
                     writer.WriteBoolean(entry.NodeType == NodeType.CustomTypeArray, BooleanCoding.Word);
 
                     if (entry.NodeType == NodeType.CustomTypeArray)
-                        writer.WriteInt32((short)array.Values.Count);
+                    {
+                        if (Version == 0)
+                            writer.WriteInt32(0);
+                        else
+                            writer.WriteInt32((short)array.Values.Count);
+                    }
                     else
-                        writer.WriteInt32((short)array.RawValuesArray.Length);
-
-
+                    {
+                        if (Version == 0)
+                            writer.WriteInt32(0);
+                        else
+                            writer.WriteInt32((short)array.RawValuesArray.Length);
+                    }
                 }
             }
         }
@@ -123,11 +134,17 @@ namespace GTStandardDefinitionEditor.Entities
                     var arr = entry as SDEFParamArray;
                     if (entry.NodeType == NodeType.CustomTypeArray)
                     {
+                        if (Version == 0)
+                            writer.WriteInt32(arr.Values.Count);
+
                         for (int i = 0; i < arr.Values.Count; i++)
                           TraverseAndWriteData(writer, arr.Values[i]);
                     }
                     else if (entry.NodeType == NodeType.RawValueArray)
                     {
+                        if (Version == 0)
+                            writer.WriteInt32(arr.RawValuesArray.Length);
+
                         foreach (var val in arr.RawValuesArray)
                             val.WriteToStream(writer);
                     }

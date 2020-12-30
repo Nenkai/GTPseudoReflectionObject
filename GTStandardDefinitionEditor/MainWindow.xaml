@@ -14,6 +14,8 @@
                 <MenuItem Name="menuItem_Save" Header="_Save As.." IsEnabled="False" Click="SaveFile_Click"/>
                 <MenuItem Name="menuItem_SaveDirect" Header="_Save" IsEnabled="False" Click="SaveDirect_Click"/>
                 <Separator />
+                <MenuItem Name="menuItem_ReloadDefs" Header="_Reload Parameter Definitions (params_db.txt)" Click="menuItem_ReloadDefs_Clicked"/>
+                <Separator />
                 <MenuItem Header="_Exit" />
             </MenuItem>
             <MenuItem Header="_About" Height="24" Click="MenuItem_Click">
@@ -35,29 +37,37 @@
 
             <Grid DockPanel.Dock="Top" Grid.Column="1" Background="LightGray" >
                 <Label Content="Type:" Margin="10,10,0,0" HorizontalAlignment="Left"  Width="Auto" Height="Auto" VerticalAlignment="Top"/>
-                <Label Name="paramType" Content="N/A" Margin="52,10,10,0" Height="Auto" HorizontalContentAlignment="Right" VerticalAlignment="Top"/>
+                <Label Name="paramType" Content="N/A" Margin="52,10,10,0" Height="Auto" HorizontalContentAlignment="Right" VerticalAlignment="Top" FontWeight="Bold"/>
 
                 <Label Content="Byte Value:" Margin="10,41,0,0" HorizontalAlignment="Left"  Width="Auto" Height="Auto" VerticalAlignment="Top"/>
-                <xctk:ByteUpDown IsEnabled="False" Name="param_Byte" Margin="92,46,7,0" Height="20" ValueChanged="param_Byte_ValueChanged" VerticalAlignment="Top"/>
+                <xctk:ByteUpDown IsEnabled="False" Name="param_Byte" Margin="204,46,7,0" Height="20" ValueChanged="param_Byte_ValueChanged" VerticalAlignment="Top"/>
                 <Label Content="Signed Byte Value:" Margin="10,72,0,0" HorizontalAlignment="Left"  Width="Auto" Height="26" VerticalAlignment="Top"/>
-                <xctk:SByteUpDown IsEnabled="False" Name="param_SByte" Margin="132,77,10,0" Height="20" ValueChanged="param_SByte_ValueChanged" VerticalAlignment="Top"/>
+                <xctk:SByteUpDown IsEnabled="False" Name="param_SByte" Margin="204,77,10,0" Height="20" ValueChanged="param_SByte_ValueChanged" VerticalAlignment="Top"/>
                 <Label Content="Bool Value:" Margin="10,103,0,0" HorizontalAlignment="Left"  Width="Auto" Height="26" VerticalAlignment="Top"/>
 
                 <Label Content="Integer Value:" Margin="10,134,0,0" HorizontalAlignment="Left"  Width="Auto" Height="28" VerticalAlignment="Top"/>
-                <xctk:IntegerUpDown IsEnabled="False" Name="param_Integer" Margin="100,138,10,0" Height="20" ValueChanged="param_Integer_ValueChanged" VerticalAlignment="Top"/>
+                <xctk:IntegerUpDown IsEnabled="False" Name="param_Integer" Margin="204,138,10,0" Height="20" ValueChanged="param_Integer_ValueChanged" VerticalAlignment="Top"/>
                 <Label Content="Unsigned Integer Value:" Margin="10,165,0,0" HorizontalAlignment="Left"  Width="Auto" Height="26" VerticalAlignment="Top"/>
-                <xctk:UIntegerUpDown IsEnabled="False" Name="param_UInteger" Margin="160,170,10,0" Height="20" ValueChanged="param_UInteger_ValueChanged" VerticalAlignment="Top"/>
+                <xctk:UIntegerUpDown IsEnabled="False" Name="param_UInteger" Margin="204,170,10,0" Height="20" ValueChanged="param_UInteger_ValueChanged" VerticalAlignment="Top"/>
 
                 <Label Content="Float Value:" Margin="10,196,0,0" HorizontalAlignment="Left" Width="Auto"  VerticalAlignment="Top"/>
-                <xctk:SingleUpDown IsEnabled="False" Name="param_Single" Margin="89,201,10,0" Height="20" ValueChanged="param_Single_ValueChanged" VerticalAlignment="Top"/>
+                <xctk:SingleUpDown IsEnabled="False" Name="param_Single" Margin="204,201,10,0" Height="20" ValueChanged="param_Single_ValueChanged" VerticalAlignment="Top"/>
 
                 <Label Content="Double Value:" Margin="10,227,0,0" HorizontalAlignment="Left" Width="Auto" Height="Auto" VerticalAlignment="Top"/>
-                <xctk:DoubleUpDown IsEnabled="False" Name="param_Double" Margin="100,232,10,0" Height="20" ValueChanged="param_Double_ValueChanged" VerticalAlignment="Top"/>
-                <CheckBox IsEnabled="False" Name="param_Bool" Content="Enabled" HorizontalAlignment="Left" Margin="84,109,0,0" Height="20" VerticalAlignment="Top"/>
+                <xctk:DoubleUpDown IsEnabled="False" Name="param_Double" Margin="204,232,10,0" Height="20" ValueChanged="param_Double_ValueChanged" VerticalAlignment="Top"/>
+                <CheckBox IsEnabled="False" Name="param_Bool" Content="Enabled" HorizontalAlignment="Left" Margin="84,109,0,0" Height="20" VerticalAlignment="Top" Checked="param_Bool_Checked" Unchecked="param_Bool_Checked"/>
 
                 <Label Content="Unsigned Long Value:" Margin="10,257,0,0" HorizontalAlignment="Left" Width="Auto" Height="Auto" VerticalAlignment="Top"/>
-                <xctk:ULongUpDown IsEnabled="False" Name="param_ULong" Margin="140,261,7,0" Height="20" ValueChanged="param_ULong_ValueChanged" VerticalAlignment="Top"/>
+                <xctk:ULongUpDown IsEnabled="False" Name="param_ULong" Margin="204,263,7,0" Height="20" ValueChanged="param_ULong_ValueChanged" VerticalAlignment="Top"/>
 
+                <Label Content="String Value:" Margin="10,287,0,0" HorizontalAlignment="Left" Width="Auto" Height="Auto" VerticalAlignment="Top"/>
+                <TextBox IsEnabled="False" Name="param_String" Margin="204,294,7,0" Height="20" TextChanged="param_String_ValueChanged" VerticalAlignment="Top"/>
+                
+                <Grid Background="White" Height="143" VerticalAlignment="Bottom">
+                    <Label Name="parameterName" Content="N/A" Margin="10,0,10,107" FontWeight="Bold" Height="26" VerticalAlignment="Bottom"/>
+                    <Separator Height="13" Margin="10,36,10,0" VerticalAlignment="Top"/>
+                    <TextBlock Name="parameterDescription" Margin="10,0,10,10" TextWrapping="Wrap" Text="N/A" Height="79" VerticalAlignment="Bottom"/>
+                </Grid>
             </Grid>
         </DockPanel>
     </DockPanel>

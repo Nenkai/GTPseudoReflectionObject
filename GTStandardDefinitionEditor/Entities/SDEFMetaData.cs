@@ -30,8 +30,11 @@ namespace GTStandardDefinitionEditor.Entities
                     throw new InvalidDataException("Not a SDEF file.");
 
                 bs.Position += 4; // File Ptr
-                bs.ReadInt32(); // One
-                bs.ReadByte(); // Empty
+
+                // When 1, all arrays are fixed length and provided in the type metadata.
+                int version = bs.ReadInt32();
+                if (version >= 1)
+                    bs.ReadByte(); // Empty
 
                 int catCount = bs.ReadInt32();
 
@@ -63,7 +66,8 @@ namespace GTStandardDefinitionEditor.Entities
                             {
                                 entry.ArrayCategoryIndex = bs.ReadUInt16();
                                 entry.ArrayHasCustomType = bs.ReadBoolean(BooleanCoding.Word);
-                                entry.ArrayLength = bs.ReadUInt32();
+
+                                entry.ArrayLength = bs.ReadUInt32(); // 0 when version is 0 - its variable
                             }
                         }
                     }
@@ -75,6 +79,7 @@ namespace GTStandardDefinitionEditor.Entities
 
                 // The data part is the tree structure reassembling & data
                 var def = new StandardDefinition();
+                def.Version = version;
                 var mainCategory = sdef.Categories[sdef.MasterTypeIndexOrID];
 
                 def.ParameterRoot = new SDEFParam();
@@ -82,12 +87,12 @@ namespace GTStandardDefinitionEditor.Entities
                 def.ParameterRoot.NodeType = NodeType.CustomType;
 
                 int depth = 0;
-                Traverse(bs, def, def.ParameterRoot, sdef, mainCategory, ref depth);
+                Traverse(bs, version, def, def.ParameterRoot, sdef, mainCategory, ref depth);
                 return def;
             }
         }
 
-        public static void Traverse(BinaryStream reader, StandardDefinition sdef, SDEFBase parentNode, SDEFMetaData sdefMetadata, SDEFMetaDataCategory nodeCategory, ref int depth)
+        public static void Traverse(BinaryStream reader, int version, StandardDefinition sdef, SDEFBase parentNode, SDEFMetaData sdefMetadata, SDEFMetaDataCategory nodeCategory, ref int depth)
         {
             depth++;
             foreach (var entry in nodeCategory.Entries)
@@ -108,7 +113,7 @@ namespace GTStandardDefinitionEditor.Entities
                     current.NodeType = NodeType.CustomType;
 
                     // Traverse children parameter for this basic type
-                    Traverse(reader, sdef, current, sdefMetadata, sdefMetadata.Categories[entry.TypeOrIndex], ref depth);
+                    Traverse(reader, version, sdef, current, sdefMetadata, sdefMetadata.Categories[entry.TypeOrIndex], ref depth);
                 }
                 else if ((ValueType)entry.TypeOrIndex == ValueType.Array)
                 {
@@ -116,6 +121,8 @@ namespace GTStandardDefinitionEditor.Entities
                     {
                         current.NodeType = NodeType.CustomTypeArray;
                         current.CustomTypeName = sdefMetadata.Categories[entry.ArrayCategoryIndex].Name;
+                        if (version == 0)
+                            entry.ArrayLength = reader.ReadUInt32();
 
                         for (int i = 0; i < entry.ArrayLength; i++)
                         {
@@ -124,7 +131,7 @@ namespace GTStandardDefinitionEditor.Entities
                             arrayElement.CustomTypeName = current.CustomTypeName;
                             arrayElement.NodeType = NodeType.CustomType;
                             arrayElement.Name = $"[{i}]";
-                            Traverse(reader, sdef, arrayElement, sdefMetadata, sdefMetadata.Categories[entry.ArrayCategoryIndex], ref depth);
+                            Traverse(reader, version, sdef, arrayElement, sdefMetadata, sdefMetadata.Categories[entry.ArrayCategoryIndex], ref depth);
 
                             // Don't forget to add our array element to the global parameter list
                             sdef.ParameterList.Add(arrayElement);
@@ -135,6 +142,8 @@ namespace GTStandardDefinitionEditor.Entities
                     {
                         current.CustomTypeName = nodeCategory.Name;
                         current.NodeType = NodeType.RawValueArray;
+                        if (version == 0)
+                            entry.ArrayLength = reader.ReadUInt32();
 
                         (current as SDEFParamArray).RawValuesArray = new SDEFVariant[entry.ArrayLength];
                         for (int i = 0; i < entry.ArrayLength; i++)
@@ -188,6 +197,10 @@ namespace GTStandardDefinitionEditor.Entities
             else if (valType == ValueType.ULong)
             {
                 variant = new SDEFVariant(bs.ReadUInt64());
+            }
+            else if (valType == ValueType.String)
+            {
+                variant = new SDEFVariant(bs.ReadString(StringCoding.Int32CharCount));
             }
             else
             {

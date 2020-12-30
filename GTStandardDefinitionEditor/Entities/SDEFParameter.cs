@@ -86,6 +86,7 @@ namespace GTStandardDefinitionEditor.Entities
         private double _double;
         private sbyte _sByte;
         private ulong _ulong;
+        private string _string;
 
         public SDEFVariant(int val)
         {
@@ -135,6 +136,12 @@ namespace GTStandardDefinitionEditor.Entities
             _double = val;
         }
 
+        public SDEFVariant(string val)
+        {
+            Type = ValueType.String;
+            _string = val;
+        }
+
         public int GetInt() => _int;
         public byte GetByte() => _byte;
         public bool GetBool() => _bool;
@@ -143,6 +150,7 @@ namespace GTStandardDefinitionEditor.Entities
         public double GetDouble() => _double;
         public sbyte GetSByte() => _sByte;
         public ulong GetULong() => _ulong;
+        public string GetString() => _string;
 
         public void Set(int value) => _int = value;
         public void Set(uint value) => _uint = value;
@@ -152,6 +160,7 @@ namespace GTStandardDefinitionEditor.Entities
         public void Set(float value) => _float = value;
         public void Set(double value) => _double = value;
         public void Set(ulong value) => _ulong = value;
+        public void Set(string value) => _string = value;
 
         public void WriteToStream(BinaryStream writer)
         {
@@ -173,6 +182,8 @@ namespace GTStandardDefinitionEditor.Entities
                     writer.WriteDouble(_double); break;
                 case ValueType.ULong:
                     writer.WriteDouble(_ulong); break;
+                case ValueType.String:
+                    writer.WriteString(_string, StringCoding.Int32CharCount); break;
                 default:
                     break;
             }
@@ -204,6 +215,8 @@ namespace GTStandardDefinitionEditor.Entities
                     return $"{_ulong} (ULong)";
                 case ValueType.Double:
                     return $"{_double} (Double)";
+                case ValueType.String:
+                    return $"{_string} (String)";
                 default:
                     return null;
             }
@@ -215,6 +228,7 @@ namespace GTStandardDefinitionEditor.Entities
         Nothing,
         Null,
         Array = 2,
+        String = 3,
         SByte = 4,
         Byte = 5,
         Bool = 7,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,12 +26,40 @@ namespace GTStandardDefinitionEditor
     /// </summary>
     public partial class MainWindow : Window
     {
+        public Dictionary<string, string> ParamDescription = new Dictionary<string, string>();
         public StandardDefinition Database { get; set; }
         public SDEFListing CurrentParameter { get; set; }
         public string LastFile { get; set; }
         public MainWindow()
         {
+            LoadDefinitions();
             InitializeComponent();
+        }
+
+        public bool LoadDefinitions()
+        {
+            ParamDescription.Clear();
+            if (File.Exists("params_db.txt"))
+            {
+                string[] lines = File.ReadAllLines("params_db.txt");
+                foreach (var line in lines)
+                {
+                    if (string.IsNullOrEmpty(line) || line.StartsWith("//"))
+                        continue;
+
+                    string[] spl = line.Split('|');
+
+                    if (spl.Length < 2)
+                        continue;
+
+                    if (!ParamDescription.ContainsKey(spl[0]))
+                        ParamDescription.Add(spl[0], spl[1]);
+                }
+            }
+            else
+                return false;
+
+            return true;
         }
 
         private void OpenFile_Click(object sender, RoutedEventArgs e)
@@ -99,6 +128,14 @@ namespace GTStandardDefinitionEditor
             tb_Status.Text = $"{DateTime.Now} - Saved SDEF file as {LastFile}";
         }
 
+        private void menuItem_ReloadDefs_Clicked(object sender, RoutedEventArgs e)
+        {
+            if (!LoadDefinitions())
+                tb_Status.Text = $"{DateTime.Now} - Could not find params_db.txt";
+            else
+                tb_Status.Text = $"{DateTime.Now} - Loaded {ParamDescription.Count} definitions";
+        }
+
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Credits:\n" +
@@ -122,6 +159,14 @@ namespace GTStandardDefinitionEditor
             if (CurrentParameter?.Entry?.NodeType == NodeType.CustomType || CurrentParameter?.Entry?.NodeType == NodeType.CustomTypeArray)
             {
                 paramType.Content = CurrentParameter.Entry.CustomTypeName;
+                if (CurrentParameter.Entry != null)
+                {
+                    parameterName.Content = CurrentParameter.Entry.Name;
+                    if (ParamDescription.TryGetValue(CurrentParameter.Entry.Name, out string desc))
+                        parameterDescription.Text = desc;
+                    else
+                        parameterDescription.Text = "No description available";
+                }
             }
             else 
             {
@@ -153,8 +198,20 @@ namespace GTStandardDefinitionEditor
                     case Entities.ValueType.ULong:
                         param_ULong.IsEnabled = true;
                         param_ULong.Value = value.GetULong(); break;
+                    case Entities.ValueType.String:
+                        param_String.IsEnabled = true;
+                        param_String.Text = value.GetString(); break;
                     default:
                         break;
+                }
+
+                if (CurrentParameter.Entry != null)
+                {
+                    parameterName.Content = CurrentParameter.Entry.Name;
+                    if (ParamDescription.TryGetValue(CurrentParameter.Entry.Name, out string desc))
+                        parameterDescription.Text = desc;
+                    else
+                        parameterDescription.Text = "No description available";
                 }
             }
             
@@ -222,10 +279,31 @@ namespace GTStandardDefinitionEditor
 
         private void param_ULong_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (param_Integer.Value != null)
+            if (param_ULong.Value != null)
             {
                 var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
                 val.Set(param_ULong.Value.Value);
+                CurrentParameter.Name = CurrentParameter.ToString();
+            }
+        }
+
+        private void param_String_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (param_String.Text != null)
+            {
+                var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
+                val.Set(param_String.Text);
+                CurrentParameter.Name = CurrentParameter.ToString();
+            }
+        }
+
+
+        private void param_Bool_Checked(object sender, RoutedEventArgs e)
+        {
+            if (param_Bool.IsChecked != null)
+            {
+                var val = CurrentParameter.ArrayElement ?? (CurrentParameter.Entry as SDEFParam).RawValue;
+                val.Set(param_Bool.IsChecked.Value);
                 CurrentParameter.Name = CurrentParameter.ToString();
             }
         }
@@ -304,6 +382,9 @@ namespace GTStandardDefinitionEditor
 
             param_ULong.IsEnabled = false;
             param_ULong.Value = null;
+
+            param_String.IsEnabled = false;
+            param_String.Text = null;
         }
     }
 
@@ -341,7 +422,10 @@ namespace GTStandardDefinitionEditor
         public override string ToString()
         {
             if (ArrayElement != null)
-                return $"(value) - {ArrayElement.ToString()}";
+                return $"[{ArrayElementIndex}]- {ArrayElement.ToString()}";
+
+            if (Entry is null)
+                return null;
 
             if (Entry.NodeType == NodeType.CustomType)
                 return $"{Entry.Name} - {Entry.CustomTypeName}";

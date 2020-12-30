@@ -1,0 +1,20 @@
+﻿// Definition file - use to describe fields
+// Empty lines or // comments are allowed
+
+// AES
+ex_apf_g|All Pass Filter Gain (Higher = smoother and quieter)
+ex_duct_r|Higher = thinner noise and raspiness? (MIN 0.01)
+ex_lpf_fc|Low Pass Filter (FC?)
+exhaustTemp|Exhaust temps in celsius?
+exhaustTipDiameter|Lower = slightly higher pitch
+exend_fb_hf|HF and LF = high frequency, low frequency?
+exend_fb_lf|Higher = less bass/more treble
+exend_fc|Raspiness?
+exhaustPipeDiameter|Lower = slightly higher pitch, Main exhaust diameter (in mm?)
+expipe_len|Longer = more trumpety - Exhaust pipe length (feet or m?)
+flownoise_level|Possibly negative decibels?
+ampnoise|Amplification?
+phasenoise|Exhaust 'blowyness'
+
+misfire_thr_sens|Possibly throttle sensitivity for raspy noise
+output_scale|Loudness
