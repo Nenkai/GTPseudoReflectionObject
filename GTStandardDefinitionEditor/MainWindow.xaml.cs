@@ -287,7 +287,7 @@ namespace GTStandardDefinitionEditor
             }
         }
 
-        private void param_String_ValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private void param_String_ValueChanged(object sender, RoutedEventArgs e)
         {
             if (param_String.Text != null)
             {
