@@ -128,6 +128,14 @@ namespace GTStandardDefinitionEditor
             tb_Status.Text = $"{DateTime.Now} - Saved SDEF file as {LastFile}";
         }
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                if (menuItem_SaveDirect.IsEnabled is true)
+                    SaveDirect_Click(sender, e);
+            }
+        }
         private void menuItem_ReloadDefs_Clicked(object sender, RoutedEventArgs e)
         {
             if (!LoadDefinitions())

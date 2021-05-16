@@ -6,7 +6,7 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:GTStandardDefinitionEditor"
         mc:Ignorable="d"
-        Title="Gran Turismo Standard Definition Editor" Height="700" Width="860">
+        Title="Gran Turismo Standard Definition Editor" Height="700" Width="860" KeyDown="Window_KeyDown">
     <DockPanel LastChildFill="True">
         <Menu DockPanel.Dock="Top" >
             <MenuItem Header="_File" Height="24">
