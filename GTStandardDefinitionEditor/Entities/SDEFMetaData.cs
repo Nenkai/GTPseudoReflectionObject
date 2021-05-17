@@ -29,12 +29,21 @@ namespace GTStandardDefinitionEditor.Entities
                 if (bs.ReadString(4) != MAGIC)
                     throw new InvalidDataException("Not a SDEF file.");
 
-                bs.Position += 4; // File Ptr
-
-                // When 1, all arrays are fixed length and provided in the type metadata.
-                int version = bs.ReadInt32();
-                if (version >= 1)
-                    bs.ReadByte(); // Empty
+                uint unk = bs.ReadUInt32();
+                int fixedArrLengthVersion;
+                if (unk >= 1) // GT7SP Uses that
+                {
+                    fixedArrLengthVersion = 1; // By default seems like its fixed arrays
+                    uint unkSize = bs.ReadUInt32();
+                    bs.Position += unkSize; // Not figured
+                }
+                else
+                {
+                    // When 1, all arrays are fixed length and provided in the type metadata.
+                    fixedArrLengthVersion = bs.ReadInt32();
+                    if (fixedArrLengthVersion >= 1)
+                        bs.ReadByte(); // Empty
+                }
 
                 int catCount = bs.ReadInt32();
 
@@ -79,7 +88,7 @@ namespace GTStandardDefinitionEditor.Entities
 
                 // The data part is the tree structure reassembling & data
                 var def = new StandardDefinition();
-                def.Version = version;
+                def.Version = fixedArrLengthVersion;
                 var mainCategory = sdef.Categories[sdef.MasterTypeIndexOrID];
 
                 def.ParameterRoot = new SDEFParam();
@@ -87,7 +96,7 @@ namespace GTStandardDefinitionEditor.Entities
                 def.ParameterRoot.NodeType = NodeType.CustomType;
 
                 int depth = 0;
-                Traverse(bs, version, def, def.ParameterRoot, sdef, mainCategory, ref depth);
+                Traverse(bs, fixedArrLengthVersion, def, def.ParameterRoot, sdef, mainCategory, ref depth);
                 return def;
             }
         }

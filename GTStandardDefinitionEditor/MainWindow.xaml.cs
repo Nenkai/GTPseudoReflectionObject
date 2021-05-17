@@ -83,7 +83,7 @@ namespace GTStandardDefinitionEditor
 
                 BuildTree();
                 menuItem_Save.IsEnabled = true;
-                menuItem_SaveDirect.IsEnabled = false;
+                menuItem_SaveDirect.IsEnabled = true;
                 LastFile = null;
 
                 tb_Status.Text = $"{DateTime.Now} - Loaded SDEF file with {Database.ParameterList.Count} parameters";
@@ -108,7 +108,6 @@ namespace GTStandardDefinitionEditor
                 }
 
                 LastFile = saveDialog.FileName;
-                menuItem_SaveDirect.IsEnabled = true;
                 tb_Status.Text = $"{DateTime.Now} - Saved SDEF file as {saveDialog.FileName}";
             }
         }
@@ -430,7 +429,7 @@ namespace GTStandardDefinitionEditor
         public override string ToString()
         {
             if (ArrayElement != null)
-                return $"[{ArrayElementIndex}]- {ArrayElement.ToString()}";
+                return $"[{ArrayElementIndex}] - {ArrayElement}";
 
             if (Entry is null)
                 return null;
@@ -440,7 +439,7 @@ namespace GTStandardDefinitionEditor
             else if (Entry.NodeType == NodeType.CustomTypeArray)
                 return $"{Entry.Name} - {Entry.CustomTypeName}[]";
             else if (Entry.NodeType == NodeType.RawValue)
-                return $"{Entry.Name} - {(Entry as SDEFParam).RawValue.ToString()}";
+                return $"{Entry.Name} - {(Entry as SDEFParam).RawValue}";
             else if (Entry.NodeType == NodeType.RawValueArray)
                 return $"{Entry.Name}[]";
             else
