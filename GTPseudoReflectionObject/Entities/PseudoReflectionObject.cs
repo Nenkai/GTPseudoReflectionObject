@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using System.IO;
 using Syroot.BinaryData;
 
-namespace GTStandardDefinitionEditor.Entities
+namespace GTPseudoReflectionObject.Entities
 {
-    public class StandardDefinition
+    public class PseudoReflectionObject
     {
         public SDEFParam ParameterRoot { get; set; }
         public List<SDEFBase> ParameterList { get; set; } = new List<SDEFBase>();

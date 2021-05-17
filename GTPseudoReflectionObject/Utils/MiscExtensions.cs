@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using System.IO;
 using Syroot.BinaryData;
-namespace GTStandardDefinitionEditor.Utils
+namespace GTPseudoReflectionObject.Utils
 {
     public static class MiscExtensions
     {

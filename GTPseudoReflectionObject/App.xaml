@@ -1,7 +1,7 @@
-﻿<Application x:Class="GTStandardDefinitionEditor.App"
+﻿<Application x:Class="GTPseudoReflectionObject.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:GTStandardDefinitionEditor"
+             xmlns:local="clr-namespace:GTPseudoReflectionObject"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

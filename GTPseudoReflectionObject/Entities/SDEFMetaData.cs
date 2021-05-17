@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using System.IO;
 
 using Syroot.BinaryData;
-using GTStandardDefinitionEditor.Utils;
+using GTPseudoReflectionObject.Utils;
 
-namespace GTStandardDefinitionEditor.Entities
+namespace GTPseudoReflectionObject.Entities
 {
     public class SDEFMetaData
     {
@@ -18,7 +18,7 @@ namespace GTStandardDefinitionEditor.Entities
         public ushort MasterTypeIndexOrID { get; set; }
         public bool MasterHasCustomType { get; set; }
 
-        public static StandardDefinition FromFile(string path)
+        public static PseudoReflectionObject FromFile(string path)
         {
             var bytes = File.ReadAllBytes(path);
 
@@ -87,7 +87,7 @@ namespace GTStandardDefinitionEditor.Entities
                 sdef.MasterHasCustomType = bs.ReadBoolean(BooleanCoding.Word);
 
                 // The data part is the tree structure reassembling & data
-                var def = new StandardDefinition();
+                var def = new PseudoReflectionObject();
                 def.Version = fixedArrLengthVersion;
                 var mainCategory = sdef.Categories[sdef.MasterTypeIndexOrID];
 
@@ -101,7 +101,7 @@ namespace GTStandardDefinitionEditor.Entities
             }
         }
 
-        public static void Traverse(BinaryStream reader, int version, StandardDefinition sdef, SDEFBase parentNode, SDEFMetaData sdefMetadata, SDEFMetaDataCategory nodeCategory, ref int depth)
+        public static void Traverse(BinaryStream reader, int version, PseudoReflectionObject sdef, SDEFBase parentNode, SDEFMetaData sdefMetadata, SDEFMetaDataCategory nodeCategory, ref int depth)
         {
             depth++;
             foreach (var entry in nodeCategory.Entries)

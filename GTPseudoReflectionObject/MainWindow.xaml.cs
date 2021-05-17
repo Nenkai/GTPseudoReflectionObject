@@ -17,9 +17,9 @@ using System.Collections.ObjectModel;
 
 using Microsoft.Win32;
 
-using GTStandardDefinitionEditor.Entities;
+using GTPseudoReflectionObject.Entities;
 
-namespace GTStandardDefinitionEditor
+namespace GTPseudoReflectionObject
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -27,7 +27,7 @@ namespace GTStandardDefinitionEditor
     public partial class MainWindow : Window
     {
         public Dictionary<string, string> ParamDescription = new Dictionary<string, string>();
-        public StandardDefinition Database { get; set; }
+        public PseudoReflectionObject Database { get; set; }
         public SDEFListing CurrentParameter { get; set; }
         public string LastFile { get; set; }
         public MainWindow()

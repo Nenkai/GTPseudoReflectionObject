@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Syroot.BinaryData;
 
-namespace GTStandardDefinitionEditor.Entities
+namespace GTPseudoReflectionObject.Entities
 {
     public abstract class SDEFBase
     {

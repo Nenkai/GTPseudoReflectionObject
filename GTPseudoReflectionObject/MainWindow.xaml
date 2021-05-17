@@ -1,12 +1,12 @@
-﻿<Window x:Class="GTStandardDefinitionEditor.MainWindow"
+﻿<Window x:Class="GTPseudoReflectionObject.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
-        xmlns:local="clr-namespace:GTStandardDefinitionEditor"
+        xmlns:local="clr-namespace:GTPseudoReflectionObject"
         mc:Ignorable="d"
-        Title="Gran Turismo Standard Definition Editor" Height="700" Width="860" KeyDown="Window_KeyDown">
+        Title="Gran Turismo Pseudo Reflection Object Editor" Height="700" Width="860" KeyDown="Window_KeyDown">
     <DockPanel LastChildFill="True">
         <Menu DockPanel.Dock="Top" >
             <MenuItem Header="_File" Height="24">

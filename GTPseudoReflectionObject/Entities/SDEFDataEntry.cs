@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using GTStandardDefinitionEditor.Utils;
-namespace GTStandardDefinitionEditor.Entities
+using GTPseudoReflectionObject.Utils;
+namespace GTPseudoReflectionObject.Entities
 {
     public class SDEFMetaDataEntry
     {
